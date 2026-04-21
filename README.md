@@ -147,6 +147,40 @@ for the full `SKAdNetworkItems` list.)
 InterstitialAdController(showEvery: 3) // show one interstitial per N game overs
 ```
 
+## App icon
+
+The launcher icon is a chunky yellow bird on a sky-blue gradient, matching the
+in-game art style. It is **generated from scratch** by
+`tools/generate_icon.py` (pure Python + Pillow) — no third-party clipart,
+fonts, or licensed assets are used, so it's free to ship.
+
+Two PNGs live under `assets/icon/`:
+
+| File                        | Purpose                                                         |
+| --------------------------- | --------------------------------------------------------------- |
+| `app_icon.png`              | 1024×1024 master icon (iOS + Android legacy)                    |
+| `app_icon_foreground.png`   | 1024×1024 transparent foreground for Android adaptive icons     |
+
+### Regenerate the art
+
+```bash
+pip install Pillow
+python3 tools/generate_icon.py
+```
+
+### Apply it to iOS + Android
+
+After `flutter create` has produced the native folders, run:
+
+```bash
+dart run flutter_launcher_icons
+```
+
+That reads the `flutter_launcher_icons` block in `pubspec.yaml` and writes
+every required size into `android/app/src/main/res/mipmap-*` and
+`ios/Runner/Assets.xcassets/AppIcon.appiconset/`. Rebuild the app and the
+new icon shows up on the home screen.
+
 ## Tuning
 
 Gameplay constants live at the top of `lib/game/game_screen.dart`:
