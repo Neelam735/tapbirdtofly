@@ -161,25 +161,39 @@ Two PNGs live under `assets/icon/`:
 | `app_icon.png`              | 1024×1024 master icon (iOS + Android legacy)                    |
 | `app_icon_foreground.png`   | 1024×1024 transparent foreground for Android adaptive icons     |
 
-### Regenerate the art
+### Apply the icon to iOS + Android
+
+The artwork under `assets/icon/` is only source art — it doesn't become the
+launcher icon until the platform-specific slots are written. Run:
 
 ```bash
 pip install Pillow
 python3 tools/generate_icon.py
 ```
 
-### Apply it to iOS + Android
+The script writes **every** required size directly into the native project:
 
-After `flutter create` has produced the native folders, run:
+- `android/app/src/main/res/mipmap-*/ic_launcher.png` (legacy)
+- `android/app/src/main/res/mipmap-*/ic_launcher_foreground.png` (adaptive FG)
+- `android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml`
+- `android/app/src/main/res/values/ic_launcher_background.xml`
+- `ios/Runner/Assets.xcassets/AppIcon.appiconset/*.png` + `Contents.json`
+
+No `dart run flutter_launcher_icons` needed.
+
+### If the icon still looks unchanged
+
+Icon changes are **not** picked up by hot reload, and Android aggressively
+caches launcher icons. After regenerating:
 
 ```bash
-dart run flutter_launcher_icons
+flutter clean
+# uninstall the old build from the device/emulator (Android caches icons)
+flutter run
 ```
 
-That reads the `flutter_launcher_icons` block in `pubspec.yaml` and writes
-every required size into `android/app/src/main/res/mipmap-*` and
-`ios/Runner/Assets.xcassets/AppIcon.appiconset/`. Rebuild the app and the
-new icon shows up on the home screen.
+On a real Android device, if the icon still shows stale after reinstall,
+clear the launcher's cache or reboot the device.
 
 ## Tuning
 
