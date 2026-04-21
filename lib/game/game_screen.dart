@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import '../ads/banner_ad_widget.dart';
+import '../ads/interstitial_ad_controller.dart';
 import 'game_painter.dart';
 import 'models.dart';
 
@@ -26,6 +28,8 @@ class _GameScreenState extends State<GameScreen>
   static const double birdXFactor = 0.28;
 
   late final Ticker _ticker;
+  final InterstitialAdController _interstitial =
+      InterstitialAdController(showEvery: 3);
   Duration _lastTick = Duration.zero;
   final Random _rng = Random();
 
@@ -42,11 +46,13 @@ class _GameScreenState extends State<GameScreen>
   void initState() {
     super.initState();
     _ticker = createTicker(_onTick)..start();
+    _interstitial.preload();
   }
 
   @override
   void dispose() {
     _ticker.dispose();
+    _interstitial.dispose();
     super.dispose();
   }
 
@@ -118,6 +124,7 @@ class _GameScreenState extends State<GameScreen>
         if (_hasCollision()) {
           _phase = GamePhase.gameOver;
           if (_score > _best) _best = _score;
+          _interstitial.onGameOver();
         }
       case GamePhase.gameOver:
         _bird.velocity += gravity * dt;
@@ -155,70 +162,83 @@ class _GameScreenState extends State<GameScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final newSize = Size(constraints.maxWidth, constraints.maxHeight);
-          if (newSize != _size) {
-            _size = newSize;
-            if (_phase == GamePhase.waiting && _pipes.isEmpty) {
-              _resetForWaiting();
-            }
-          }
-          return GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: _handleTap,
-            child: Stack(
-              children: [
-                CustomPaint(
-                  size: newSize,
-                  painter: GamePainter(
-                    bird: _bird,
-                    pipes: _pipes,
-                    pipeWidth: pipeWidth,
-                    pipeGap: pipeGap,
-                    birdRadius: birdRadius,
-                    birdX: newSize.width * birdXFactor,
-                    groundHeight: groundHeight,
-                    bgOffset: _bgOffset,
-                  ),
-                ),
-                SafeArea(
-                  child: Align(
-                    alignment: Alignment.topCenter,
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 24),
-                      child: Text(
-                        '$_score',
-                        style: const TextStyle(
-                          fontSize: 68,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          shadows: [
-                            Shadow(
-                              offset: Offset(3, 3),
-                              blurRadius: 0,
-                              color: Color(0xAA000000),
-                            ),
-                          ],
+      backgroundColor: Colors.black,
+      body: Column(
+        children: [
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final newSize =
+                    Size(constraints.maxWidth, constraints.maxHeight);
+                if (newSize != _size) {
+                  _size = newSize;
+                  if (_phase == GamePhase.waiting && _pipes.isEmpty) {
+                    _resetForWaiting();
+                  }
+                }
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: _handleTap,
+                  child: Stack(
+                    children: [
+                      CustomPaint(
+                        size: newSize,
+                        painter: GamePainter(
+                          bird: _bird,
+                          pipes: _pipes,
+                          pipeWidth: pipeWidth,
+                          pipeGap: pipeGap,
+                          birdRadius: birdRadius,
+                          birdX: newSize.width * birdXFactor,
+                          groundHeight: groundHeight,
+                          bgOffset: _bgOffset,
                         ),
                       ),
-                    ),
+                      SafeArea(
+                        child: Align(
+                          alignment: Alignment.topCenter,
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 24),
+                            child: Text(
+                              '$_score',
+                              style: const TextStyle(
+                                fontSize: 68,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                                shadows: [
+                                  Shadow(
+                                    offset: Offset(3, 3),
+                                    blurRadius: 0,
+                                    color: Color(0xAA000000),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (_phase == GamePhase.waiting)
+                        const _Overlay(
+                          title: 'Tap Bird to Fly',
+                          subtitle: 'Tap anywhere to start',
+                        ),
+                      if (_phase == GamePhase.gameOver)
+                        _Overlay(
+                          title: 'Game Over',
+                          subtitle:
+                              'Score: $_score    Best: $_best\nTap to play again',
+                        ),
+                    ],
                   ),
-                ),
-                if (_phase == GamePhase.waiting)
-                  const _Overlay(
-                    title: 'Tap Bird to Fly',
-                    subtitle: 'Tap anywhere to start',
-                  ),
-                if (_phase == GamePhase.gameOver)
-                  _Overlay(
-                    title: 'Game Over',
-                    subtitle: 'Score: $_score    Best: $_best\nTap to play again',
-                  ),
-              ],
+                );
+              },
             ),
-          );
-        },
+          ),
+          const SafeArea(
+            top: false,
+            child: BannerAdWidget(),
+          ),
+        ],
       ),
     );
   }
