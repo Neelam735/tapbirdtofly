@@ -183,17 +183,38 @@ No `dart run flutter_launcher_icons` needed.
 
 ### If the icon still looks unchanged
 
-Icon changes are **not** picked up by hot reload, and Android aggressively
-caches launcher icons. After regenerating:
+Run through this checklist in order — 99% of "icon didn't change" reports
+hit one of these:
 
-```bash
-flutter clean
-# uninstall the old build from the device/emulator (Android caches icons)
-flutter run
-```
+1. **The script printed `[skip]` lines.** That means `android/` or `ios/`
+   don't exist yet in your local project. Run
+   `flutter create --platforms=android,ios .` first, then re-run
+   `python3 tools/generate_icon.py`.
 
-On a real Android device, if the icon still shows stale after reinstall,
-clear the launcher's cache or reboot the device.
+2. **You only rebuilt with hot reload.** Icon resources aren't hot-reloaded:
+   ```bash
+   flutter clean
+   flutter run
+   ```
+
+3. **Android is caching the old icon.** Android launchers cache icons
+   aggressively. *Uninstall* the app from the device/emulator before
+   running again. On Pixel devices, pull down on the home screen or
+   reboot if the cache is still stuck.
+
+4. **Verify the files were actually written.** After running the script,
+   check a few paths:
+   ```bash
+   ls -la android/app/src/main/res/mipmap-xxxhdpi/
+   # should show ic_launcher.png and ic_launcher_round.png,
+   # each a few kilobytes (not the ~1KB default placeholder)
+
+   ls -la ios/Runner/Assets.xcassets/AppIcon.appiconset/
+   # should show 15+ Icon-App-*.png files
+   ```
+
+5. **iOS simulator caches icons too.** Device → Erase All Content and
+   Settings, or at least delete the app and rerun `flutter run`.
 
 ## Tuning
 

@@ -232,16 +232,35 @@ def save_sized(img: Image.Image, path: str, size: int) -> None:
     resized.save(path, optimize=True)
 
 
+def circular_mask(img: Image.Image) -> Image.Image:
+    """Return a copy of `img` with a circular alpha mask applied."""
+    w, h = img.size
+    mask = Image.new("L", (w * 2, h * 2), 0)
+    ImageDraw.Draw(mask).ellipse((0, 0, w * 2, h * 2), fill=255)
+    mask = mask.resize((w, h), Image.LANCZOS)
+    out = img.convert("RGBA").copy()
+    out.putalpha(mask)
+    return out
+
+
 def write_android(master: Image.Image, foreground: Image.Image) -> None:
     if not os.path.isdir(os.path.dirname(ANDROID_RES)):
         print(f"[skip] android project not found at {ANDROID_RES}")
+        print("       did you run `flutter create --platforms=android,ios .` first?")
         return
 
-    # Legacy square-ish icon (shown on Android <= 7).
+    round_master = circular_mask(master)
+
+    # Legacy icon (square and round variants — many launchers use the round one).
     for folder, size in ANDROID_LEGACY.items():
         save_sized(
             master,
             os.path.join(ANDROID_RES, folder, "ic_launcher.png"),
+            size,
+        )
+        save_sized(
+            round_master,
+            os.path.join(ANDROID_RES, folder, "ic_launcher_round.png"),
             size,
         )
 
@@ -253,17 +272,20 @@ def write_android(master: Image.Image, foreground: Image.Image) -> None:
             size,
         )
 
-    # Adaptive icon XML + background color.
+    # Adaptive icon XMLs — write both launcher and launcher_round so that
+    # whichever one the launcher requests, it lands on our adaptive icon.
+    adaptive_xml = (
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        '<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n'
+        '    <background android:drawable="@color/ic_launcher_background" />\n'
+        '    <foreground android:drawable="@mipmap/ic_launcher_foreground" />\n'
+        '</adaptive-icon>\n'
+    )
     anydpi = os.path.join(ANDROID_RES, "mipmap-anydpi-v26")
     os.makedirs(anydpi, exist_ok=True)
-    with open(os.path.join(anydpi, "ic_launcher.xml"), "w") as f:
-        f.write(
-            '<?xml version="1.0" encoding="utf-8"?>\n'
-            '<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n'
-            '    <background android:drawable="@color/ic_launcher_background" />\n'
-            '    <foreground android:drawable="@mipmap/ic_launcher_foreground" />\n'
-            '</adaptive-icon>\n'
-        )
+    for name in ("ic_launcher.xml", "ic_launcher_round.xml"):
+        with open(os.path.join(anydpi, name), "w") as f:
+            f.write(adaptive_xml)
 
     values = os.path.join(ANDROID_RES, "values")
     os.makedirs(values, exist_ok=True)
@@ -280,6 +302,7 @@ def write_android(master: Image.Image, foreground: Image.Image) -> None:
 def write_ios(master: Image.Image) -> None:
     if not os.path.isdir(os.path.dirname(os.path.dirname(IOS_APPICON))):
         print(f"[skip] ios project not found at {IOS_APPICON}")
+        print("       did you run `flutter create --platforms=android,ios .` first?")
         return
 
     os.makedirs(IOS_APPICON, exist_ok=True)
