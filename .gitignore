@@ -27,6 +27,7 @@ android/gradlew.bat
 android/local.properties
 android/**/GeneratedPluginRegistrant.java
 android/key.properties
+!android/key.properties.example
 **/*.keystore
 **/*.jks
 

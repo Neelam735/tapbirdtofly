@@ -61,6 +61,35 @@ flutter build appbundle --release
 flutter build ios --release
 ```
 
+### Android signing
+
+`android/app/build.gradle.kts` loads signing credentials from
+`android/key.properties`, which is **not** checked in. To produce a
+signed release build:
+
+1. Generate a keystore (once per app):
+   ```bash
+   keytool -genkey -v -keystore ~/tapbird-release.jks \
+     -keyalg RSA -keysize 2048 -validity 10000 -alias release
+   ```
+2. Copy the template and fill in your values:
+   ```bash
+   cp android/key.properties.example android/key.properties
+   # edit android/key.properties:
+   #   storePassword=...
+   #   keyPassword=...
+   #   keyAlias=release
+   #   storeFile=/Users/you/tapbird-release.jks
+   ```
+3. Build:
+   ```bash
+   flutter build appbundle --release
+   ```
+
+If `key.properties` is absent, the release build falls back to the debug
+keystore so the APK still installs on devices during development — but
+Play Store uploads require a real release keystore.
+
 ## Project layout
 
 ```
@@ -161,25 +190,27 @@ Two PNGs live under `assets/icon/`:
 | `app_icon.png`              | 1024×1024 master icon (iOS + Android legacy)                    |
 | `app_icon_foreground.png`   | 1024×1024 transparent foreground for Android adaptive icons     |
 
-### Apply the icon to iOS + Android
+### The icon is already applied
 
-The artwork under `assets/icon/` is only source art — it doesn't become the
-launcher icon until the platform-specific slots are written. Run:
+All of the native icon files are checked into this repo, so you get the
+bird launcher icon as soon as you `git pull` and rebuild — no extra steps,
+no `dart run flutter_launcher_icons`. The committed tree includes:
+
+- `android/app/src/main/res/mipmap-*/ic_launcher.png`,
+  `ic_launcher_round.png`, `ic_launcher_foreground.png`
+- `android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml` (+ `_round`)
+- `android/app/src/main/res/values/ic_launcher_background.xml`
+- `ios/Runner/Assets.xcassets/AppIcon.appiconset/*.png` + `Contents.json`
+
+To change the artwork, edit `tools/generate_icon.py` then run:
 
 ```bash
 pip install Pillow
 python3 tools/generate_icon.py
 ```
 
-The script writes **every** required size directly into the native project:
-
-- `android/app/src/main/res/mipmap-*/ic_launcher.png` (legacy)
-- `android/app/src/main/res/mipmap-*/ic_launcher_foreground.png` (adaptive FG)
-- `android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml`
-- `android/app/src/main/res/values/ic_launcher_background.xml`
-- `ios/Runner/Assets.xcassets/AppIcon.appiconset/*.png` + `Contents.json`
-
-No `dart run flutter_launcher_icons` needed.
+The script regenerates the master PNGs under `assets/icon/` **and**
+overwrites every native icon file in-place.
 
 ### If the icon still looks unchanged
 

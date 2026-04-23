@@ -244,11 +244,6 @@ def circular_mask(img: Image.Image) -> Image.Image:
 
 
 def write_android(master: Image.Image, foreground: Image.Image) -> None:
-    if not os.path.isdir(os.path.dirname(ANDROID_RES)):
-        print(f"[skip] android project not found at {ANDROID_RES}")
-        print("       did you run `flutter create --platforms=android,ios .` first?")
-        return
-
     round_master = circular_mask(master)
 
     # Legacy icon (square and round variants — many launchers use the round one).
@@ -300,11 +295,6 @@ def write_android(master: Image.Image, foreground: Image.Image) -> None:
 
 
 def write_ios(master: Image.Image) -> None:
-    if not os.path.isdir(os.path.dirname(os.path.dirname(IOS_APPICON))):
-        print(f"[skip] ios project not found at {IOS_APPICON}")
-        print("       did you run `flutter create --platforms=android,ios .` first?")
-        return
-
     os.makedirs(IOS_APPICON, exist_ok=True)
     images = []
     for fname, size, spec, idiom, scale in IOS_ICONS:
