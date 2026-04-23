@@ -1,16 +1,3 @@
-<!-- Reference AndroidManifest.xml for Flutter v2 Android embedding.
-     Compare this to your `android/app/src/main/AndroidManifest.xml`
-     and make sure the key bits below are present.
-
-     The v1-embedding error is almost always caused by a missing
-     `<meta-data android:name="flutterEmbedding" android:value="2" />`
-     line inside <application>, or a MainActivity that still extends
-     `io.flutter.app.FlutterActivity` (v1) instead of
-     `io.flutter.embedding.android.FlutterActivity` (v2).
-
-     Replace `com.example.tapbirdtofly` with your own applicationId if
-     different, and replace the AdMob APPLICATION_ID value with your
-     real AdMob app ID before release. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
         android:label="Tap Bird to Fly"
@@ -18,14 +5,13 @@
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round">
 
-        <!-- REQUIRED for Flutter 3.x. Without this line Gradle will
-             refuse to build with "use of deleted Android v1 embedding". -->
+        <!-- Flutter v2 Android embedding. REQUIRED for Flutter 3.x. -->
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
 
-        <!-- REQUIRED for google_mobile_ads. The value below is Google's
-             TEST app ID; swap it for your real AdMob app ID in release. -->
+        <!-- AdMob application ID. Google's sample/test ID; swap for your
+             real AdMob app ID before shipping to production. -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-3940256099942544~3347511713" />
