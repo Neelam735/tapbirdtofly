@@ -137,27 +137,15 @@ active gameplay.
 `<application>`:
 
 ```xml
-<!-- REQUIRED: Flutter v2 embedding. Without this line Gradle fails
-     with "use of deleted Android v1 embedding" on Flutter 3.x. -->
-<meta-data
-    android:name="flutterEmbedding"
-    android:value="2" />
-
-<!-- REQUIRED by google_mobile_ads. -->
 <meta-data
     android:name="com.google.android.gms.ads.APPLICATION_ID"
     android:value="ca-app-pub-3940256099942544~3347511713"/>
 ```
 
-A complete, minimal reference manifest is at
-`android/app/src/main/AndroidManifest.xml.reference` — diff your manifest
-against it if the build fails.
+(That is Google's sample app ID; swap it for your real AdMob app ID before
+release.)
 
-**MainActivity** — `android/app/src/main/kotlin/.../MainActivity.kt` must
-extend `io.flutter.embedding.android.FlutterActivity`. If yours extends
-`io.flutter.app.FlutterActivity` (note the `app.` vs `embedding.android.`
-package), that's the removed v1 embedding — see
-`android/app/src/main/kotlin/MainActivity.kt.reference`.
+`android/app/build.gradle` — ensure `minSdkVersion >= 23`.
 
 **iOS** — `ios/Runner/Info.plist`:
 
