@@ -63,16 +63,22 @@ flutter build ios --release
 
 ### Android signing
 
-`android/app/build.gradle.kts` loads signing credentials from
-`android/key.properties`, which is **not** checked in. To produce a
-signed release build:
+Release builds are signed using credentials loaded from
+`android/key.properties` (which is **not** checked in). The required
+Gradle wiring lives in `android/app/signing-config.snippet.kts` —
+paste those blocks into your generated `android/app/build.gradle.kts`.
 
-1. Generate a keystore (once per app):
+To produce a signed release build:
+
+1. Paste the signing blocks from
+   `android/app/signing-config.snippet.kts` into
+   `android/app/build.gradle.kts`.
+2. Generate a keystore (once per app):
    ```bash
    keytool -genkey -v -keystore ~/tapbird-release.jks \
      -keyalg RSA -keysize 2048 -validity 10000 -alias release
    ```
-2. Copy the template and fill in your values:
+3. Copy the template and fill in your values:
    ```bash
    cp android/key.properties.example android/key.properties
    # edit android/key.properties:
@@ -81,7 +87,7 @@ signed release build:
    #   keyAlias=release
    #   storeFile=/Users/you/tapbird-release.jks
    ```
-3. Build:
+4. Build:
    ```bash
    flutter build appbundle --release
    ```
